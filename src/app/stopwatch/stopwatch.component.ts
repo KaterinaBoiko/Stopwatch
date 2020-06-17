@@ -16,39 +16,27 @@ import { Subscription, timer, Subject, pipe, Observable } from "rxjs";
 export class StopwatchComponent implements OnInit {
   stopwatch: Observable<number>;
   subscription: Subscription;
-  stop: Subject<void>;
-  start: Subject<void>;
-  reset: Subject<void>;
+  stop: Subject<void> = new Subject();
+  reset: Subject<void> = new Subject();
+
   timeToDisplay: {
     hours: number;
     minutes: number;
     seconds: number;
   };
 
-  constructor() {}
+  constructor() {
+    this.stopwatch = timer(0, 1000).pipe(takeUntil(this.stop));
+  }
 
   ngOnInit(): void {
     this.nullifyTimer();
-    this.stop = new Subject<void>();
-    this.start = new Subject<void>();
-    this.reset = new Subject<void>();
-
-    this.stopwatch = timer(0, 1000).pipe(
-      takeUntil(this.stop),
-      repeatWhen(() => this.reset)
-    );
-    console.log(this.stopwatch);
-
-    //this.reset.pipe(switchMap(() => timer(0, 1000))).subscribe;
   }
 
   startTimer(): void {
     this.subscription = this.stopwatch.subscribe((x) => {
       this.timeToDisplay = this.getTimeToDisplay(x);
     });
-    console.log(this.stopwatch);
-
-    //this.start.next();
   }
 
   stopTimer(): void {
@@ -58,8 +46,8 @@ export class StopwatchComponent implements OnInit {
   }
 
   resetTimer(): void {
-    this.reset.next();
-    this.nullifyTimer();
+    this.stopTimer();
+    this.startTimer();
   }
 
   nullifyTimer(): void {
