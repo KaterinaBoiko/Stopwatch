@@ -9,7 +9,6 @@ import { timer, Subject, Observable, empty, merge } from "rxjs";
 })
 export class StopwatchComponent implements OnInit {
   stopwatch: Observable<number>;
-  //stop: Subject<void> = new Subject();
   stop: Subject<void> = new Subject<void>();
   pause: Subject<boolean> = new Subject<boolean>();
   resume: Subject<boolean> = new Subject<boolean>();
@@ -29,7 +28,7 @@ export class StopwatchComponent implements OnInit {
       this.resume.asObservable()
     ).pipe(
       startWith(true),
-      switchMap((val) => (val ? timer(0, 1000) : empty())),
+      switchMap((resumed) => (resumed ? timer(0, 1000) : empty())),
       scan((acc, curr) => (curr ? ++acc : acc)),
       takeUntil(this.stop)
     );
@@ -92,9 +91,7 @@ export class StopwatchComponent implements OnInit {
   firstClickOnWait() {
     this.isSingleClick = true;
     setTimeout(() => {
-      if (this.isSingleClick === false) {
-        this.pauseTimer();
-      }
+      if (this.isSingleClick === false) this.pauseTimer();
     }, 300);
   }
 
