@@ -1,28 +1,6 @@
 import { Component, OnInit } from "@angular/core";
-import {
-  switchMap,
-  takeUntil,
-  startWith,
-  mapTo,
-  shareReplay,
-  concatMap,
-  filter,
-  take,
-  scan,
-  withLatestFrom,
-  map,
-} from "rxjs/internal/operators";
-import {
-  timer,
-  Subject,
-  Observable,
-  empty,
-  EMPTY,
-  merge,
-  fromEvent,
-  of,
-  BehaviorSubject,
-} from "rxjs";
+import { switchMap, takeUntil, startWith, scan } from "rxjs/internal/operators";
+import { timer, Subject, Observable, empty, merge } from "rxjs";
 
 @Component({
   selector: "app-stopwatch",
@@ -31,18 +9,19 @@ import {
 })
 export class StopwatchComponent implements OnInit {
   stopwatch: Observable<number>;
-  stop: Subject<void> = new Subject();
-  paused: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  //stop: Subject<void> = new Subject();
+  stop: Subject<void> = new Subject<void>();
+  pause: Subject<boolean> = new Subject<boolean>();
+  resume: Subject<boolean> = new Subject<boolean>();
   stopwatchIsStopped: boolean;
   stopwatchIsPaused: boolean;
+  isSingleClick: boolean;
   timeToDisplay: {
     hours: number;
     minutes: number;
     seconds: number;
   };
-  stopClick$ = new Subject();
-  pause = new Subject();
-  resume = new Subject();
+  timeOfFirstClick: number = 0;
 
   constructor() {
     this.stopwatch = merge(
@@ -65,28 +44,28 @@ export class StopwatchComponent implements OnInit {
   startTimer(): void {
     this.stopwatchIsStopped = false;
 
-    if (!this.stopwatchIsPaused)
+    if (this.stopwatchIsPaused) this.resumeTimer();
+    else
       this.stopwatch.subscribe((x) => {
         this.timeToDisplay = this.getTimeToDisplay(x);
       });
-    else this.resumeTimer();
   }
 
   stopTimer(): void {
-    this.stop.next();
     this.stopwatchIsStopped = true;
+    this.stop.next();
     this.nullifyTimer();
   }
 
   pauseTimer() {
-    this.pause.next(false);
     this.stopwatchIsStopped = true;
     this.stopwatchIsPaused = true;
+    this.pause.next(false);
   }
 
   resumeTimer() {
-    this.resume.next(true);
     this.stopwatchIsPaused = false;
+    this.resume.next(true);
   }
 
   resetTimer(): void {
@@ -108,5 +87,18 @@ export class StopwatchComponent implements OnInit {
     seconds = t % 60;
 
     return { hours: hours, minutes: minutes, seconds: seconds };
+  }
+
+  firstClickOnWait() {
+    this.isSingleClick = true;
+    setTimeout(() => {
+      if (this.isSingleClick === false) {
+        this.pauseTimer();
+      }
+    }, 300);
+  }
+
+  secondClickOnWait() {
+    this.isSingleClick = false;
   }
 }

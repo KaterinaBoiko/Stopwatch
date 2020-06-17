@@ -9,7 +9,7 @@
 </div> -->
 
 <div class="buttons">
-    <button (click)="pauseTimer()"><i class="fas fa-pause"></i>Wait</button>
+    <button (click)="firstClickOnWait()" (dblclick)="secondClickOnWait()"><i class="fas fa-pause"></i>Wait</button>
     <button (click)="startTimer()" *ngIf="stopwatchIsStopped"><i class="fas fa-play"></i>Start</button>
     <button (click)="stopTimer()" *ngIf="!stopwatchIsStopped"><i class="fas fa-stop"></i>Stop</button>
     <button (click)="resetTimer()"><i class="fas fa-redo"></i>Reset</button>
