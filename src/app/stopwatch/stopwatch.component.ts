@@ -1,12 +1,28 @@
 import { Component, OnInit } from "@angular/core";
 import {
-  map,
   switchMap,
-  merge,
   takeUntil,
-  repeatWhen,
+  startWith,
+  mapTo,
+  shareReplay,
+  concatMap,
+  filter,
+  take,
+  scan,
+  withLatestFrom,
+  map,
 } from "rxjs/internal/operators";
-import { Subscription, timer, Subject, pipe, Observable } from "rxjs";
+import {
+  timer,
+  Subject,
+  Observable,
+  empty,
+  EMPTY,
+  merge,
+  fromEvent,
+  of,
+  BehaviorSubject,
+} from "rxjs";
 
 @Component({
   selector: "app-stopwatch",
@@ -15,37 +31,66 @@ import { Subscription, timer, Subject, pipe, Observable } from "rxjs";
 })
 export class StopwatchComponent implements OnInit {
   stopwatch: Observable<number>;
-  subscription: Subscription;
   stop: Subject<void> = new Subject();
-  reset: Subject<void> = new Subject();
-
+  paused: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+  stopwatchIsStopped: boolean;
+  stopwatchIsPaused: boolean;
   timeToDisplay: {
     hours: number;
     minutes: number;
     seconds: number;
   };
+  stopClick$ = new Subject();
+  pause = new Subject();
+  resume = new Subject();
 
   constructor() {
-    this.stopwatch = timer(0, 1000).pipe(takeUntil(this.stop));
+    this.stopwatch = merge(
+      this.pause.asObservable(),
+      this.resume.asObservable()
+    ).pipe(
+      startWith(true),
+      switchMap((val) => (val ? timer(0, 1000) : empty())),
+      scan((acc, curr) => (curr ? ++acc : acc)),
+      takeUntil(this.stop)
+    );
   }
 
   ngOnInit(): void {
     this.nullifyTimer();
+    this.stopwatchIsStopped = true;
+    this.stopwatchIsPaused = false;
   }
 
   startTimer(): void {
-    this.subscription = this.stopwatch.subscribe((x) => {
-      this.timeToDisplay = this.getTimeToDisplay(x);
-    });
+    this.stopwatchIsStopped = false;
+
+    if (!this.stopwatchIsPaused)
+      this.stopwatch.subscribe((x) => {
+        this.timeToDisplay = this.getTimeToDisplay(x);
+      });
+    else this.resumeTimer();
   }
 
   stopTimer(): void {
     this.stop.next();
-    this.subscription.unsubscribe();
+    this.stopwatchIsStopped = true;
     this.nullifyTimer();
   }
 
+  pauseTimer() {
+    this.pause.next(false);
+    this.stopwatchIsStopped = true;
+    this.stopwatchIsPaused = true;
+  }
+
+  resumeTimer() {
+    this.resume.next(true);
+    this.stopwatchIsPaused = false;
+  }
+
   resetTimer(): void {
+    this.stopwatchIsPaused = false;
     this.stopTimer();
     this.startTimer();
   }

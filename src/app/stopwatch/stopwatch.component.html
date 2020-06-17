@@ -4,12 +4,13 @@
     <div>{{timeToDisplay.minutes.toLocaleString('en-US', {minimumIntegerDigits: 2})}}</div>:
     <div class="seconds">{{timeToDisplay.seconds.toLocaleString('en-US', {minimumIntegerDigits: 2})}}</div>
 </div>
-<div class="buttons" *ngIf="!subscription || subscription.closed">
+<!-- <div class="buttons" *ngIf="stopwatchIsStopped">
     <button (click)="startTimer()"><i class="fas fa-play"></i>Start</button>
-</div>
+</div> -->
 
-<div class="buttons" *ngIf="subscription && !subscription.closed">
-    <button><i class="fas fa-pause"></i>Wait</button>
-    <button (click)="stopTimer()"><i class="fas fa-stop"></i>Stop</button>
+<div class="buttons">
+    <button (click)="pauseTimer()"><i class="fas fa-pause"></i>Wait</button>
+    <button (click)="startTimer()" *ngIf="stopwatchIsStopped"><i class="fas fa-play"></i>Start</button>
+    <button (click)="stopTimer()" *ngIf="!stopwatchIsStopped"><i class="fas fa-stop"></i>Stop</button>
     <button (click)="resetTimer()"><i class="fas fa-redo"></i>Reset</button>
 </div>
