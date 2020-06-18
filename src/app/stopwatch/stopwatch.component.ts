@@ -20,7 +20,6 @@ export class StopwatchComponent implements OnInit {
     minutes: number;
     seconds: number;
   };
-  timeOfFirstClick: number = 0;
 
   constructor() {
     this.stopwatch = merge(
@@ -59,16 +58,19 @@ export class StopwatchComponent implements OnInit {
   pauseTimer() {
     this.stopwatchIsStopped = true;
     this.stopwatchIsPaused = true;
+
     this.pause.next(false);
   }
 
   resumeTimer() {
     this.stopwatchIsPaused = false;
+
     this.resume.next(true);
   }
 
   resetTimer(): void {
     this.stopwatchIsPaused = false;
+
     this.stopTimer();
     this.startTimer();
   }
@@ -91,11 +93,15 @@ export class StopwatchComponent implements OnInit {
   firstClickOnWait() {
     this.isSingleClick = true;
     setTimeout(() => {
-      if (this.isSingleClick === false) this.pauseTimer();
+      if (!this.isSingleClick && !this.stopwatchIsStopped) this.pauseTimer();
     }, 300);
   }
 
   secondClickOnWait() {
     this.isSingleClick = false;
+  }
+
+  toTwoDigit(num: number): string {
+    return num.toLocaleString("en-US", { minimumIntegerDigits: 2 });
   }
 }

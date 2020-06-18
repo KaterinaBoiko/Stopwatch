@@ -1,12 +1,8 @@
-<p class="title">Stopwatch</p>
 <div class="stopwatch">
-    <div>{{timeToDisplay.hours.toLocaleString('en-US', {minimumIntegerDigits: 2})}}</div>:
-    <div>{{timeToDisplay.minutes.toLocaleString('en-US', {minimumIntegerDigits: 2})}}</div>:
-    <div class="seconds">{{timeToDisplay.seconds.toLocaleString('en-US', {minimumIntegerDigits: 2})}}</div>
+    <div>{{toTwoDigit(timeToDisplay.hours)}}</div>:
+    <div>{{toTwoDigit(timeToDisplay.minutes)}}</div>:
+    <div>{{toTwoDigit(timeToDisplay.seconds)}}</div>
 </div>
-<!-- <div class="buttons" *ngIf="stopwatchIsStopped">
-    <button (click)="startTimer()"><i class="fas fa-play"></i>Start</button>
-</div> -->
 
 <div class="buttons">
     <button (click)="firstClickOnWait()" (dblclick)="secondClickOnWait()"><i class="fas fa-pause"></i>Wait</button>
