@@ -1,6 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { switchMap, takeUntil, startWith, scan } from "rxjs/internal/operators";
-import { timer, Subject, Observable, empty, merge } from "rxjs";
+import { StopwatchService } from "../services/stopwatch.service";
 
 @Component({
   selector: "app-stopwatch",
@@ -8,71 +7,61 @@ import { timer, Subject, Observable, empty, merge } from "rxjs";
   styleUrls: ["./stopwatch.component.scss"],
 })
 export class StopwatchComponent implements OnInit {
-  stopwatch: Observable<number>;
-  stop: Subject<void> = new Subject<void>();
-  pause: Subject<boolean> = new Subject<boolean>();
-  resume: Subject<boolean> = new Subject<boolean>();
   stopwatchIsStopped: boolean;
   stopwatchIsPaused: boolean;
   isSingleClick: boolean;
+  lastClickTime: number;
   timeToDisplay: {
     hours: number;
     minutes: number;
     seconds: number;
   };
 
-  constructor() {
-    this.stopwatch = merge(
-      this.pause.asObservable(),
-      this.resume.asObservable()
-    ).pipe(
-      startWith(true),
-      switchMap((resumed) => (resumed ? timer(0, 1000) : empty())),
-      scan((acc, curr) => (curr ? ++acc : acc)),
-      takeUntil(this.stop)
-    );
-  }
+  constructor(private stwService: StopwatchService) {}
 
   ngOnInit(): void {
-    this.nullifyTimer();
     this.stopwatchIsStopped = true;
     this.stopwatchIsPaused = false;
+    this.lastClickTime = 0;
+    this.nullifyTimer();
+
+    this.stwService.time.subscribe((time) => {
+      this.timeToDisplay = this.getTimeToDisplay(time);
+    });
   }
 
   startTimer(): void {
     this.stopwatchIsStopped = false;
 
     if (this.stopwatchIsPaused) this.resumeTimer();
-    else
-      this.stopwatch.subscribe((x) => {
-        this.timeToDisplay = this.getTimeToDisplay(x);
-      });
+    else this.stwService.startTimer();
   }
 
   stopTimer(): void {
     this.stopwatchIsStopped = true;
-    this.stop.next();
+
+    this.stwService.stopTimer();
     this.nullifyTimer();
   }
 
-  pauseTimer() {
+  pauseTimer(): void {
     this.stopwatchIsStopped = true;
     this.stopwatchIsPaused = true;
 
-    this.pause.next(false);
+    this.stwService.pauseTimer();
   }
 
-  resumeTimer() {
+  resumeTimer(): void {
     this.stopwatchIsPaused = false;
 
-    this.resume.next(true);
+    this.stwService.resumeTimer();
   }
 
   resetTimer(): void {
     this.stopwatchIsPaused = false;
+    this.stopwatchIsStopped = false;
 
-    this.stopTimer();
-    this.startTimer();
+    this.stwService.resetTimer();
   }
 
   nullifyTimer(): void {
@@ -90,15 +79,12 @@ export class StopwatchComponent implements OnInit {
     return { hours: hours, minutes: minutes, seconds: seconds };
   }
 
-  firstClickOnWait() {
-    this.isSingleClick = true;
-    setTimeout(() => {
-      if (!this.isSingleClick && !this.stopwatchIsStopped) this.pauseTimer();
-    }, 300);
-  }
+  clickOnWait(): void {
+    let secondClickTime = new Date().getTime();
 
-  secondClickOnWait() {
-    this.isSingleClick = false;
+    if (secondClickTime - this.lastClickTime <= 300 && !this.stopwatchIsStopped)
+      this.pauseTimer();
+    this.lastClickTime = secondClickTime;
   }
 
   toTwoDigit(num: number): string {
